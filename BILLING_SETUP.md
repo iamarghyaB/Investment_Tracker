@@ -1,5 +1,17 @@
 # Sandbox billing setup
 
+## Vercel deployment
+
+Production dashboard: https://investment-tracker-indol-nine.vercel.app
+
+The existing Vercel project `investment-tracker` is linked locally. Production environment variables are configured, and Stripe sandbox webhook `we_1UM3HzDmCn5vZn6A3kCu6ekU` delivers events directly to `/api/billing/webhook`. Its signing secret is stored in encrypted Vercel environment variables and ignored `.env.vercel.local`; the local listener keeps its separate secret in `.env.local`.
+
+Hosted end-to-end verification passed: sign-in, authenticated Checkout, recurring sandbox payment, signed webhook activation, private persistent watchlists, cross-account isolation, Customer Portal, and cancellation enforcement. Test fixtures were removed. Finnhub returned eight connected quotes.
+
+For email confirmation redirects, set Supabase Authentication → URL Configuration Site URL to `https://investment-tracker-indol-nine.vercel.app` and add `https://investment-tracker-indol-nine.vercel.app/auth/callback` to Redirect URLs. Keep the local callback allowed for development. This dashboard setting still requires a signed-in Supabase dashboard session.
+
+Redeploy with `vercel deploy --prod`. The first-time environment provisioning helper is `node scripts/configure-vercel.mjs https://investment-tracker-indol-nine.vercel.app`; it reuses its saved sandbox webhook on subsequent runs. It requires Vercel CLI authentication and keeps secret values out of command arguments and logs.
+
 The app uses Supabase project `xyltxzqmtoqnmwpfkmnf` (InvestmentTracker), created in Makezaastdio.inc, Singapore. Its URL and public key are configured. The schema has been applied and verified with rollback-only two-user RLS fixtures.
 
 ## Local keys
