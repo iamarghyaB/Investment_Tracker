@@ -1,5 +1,5 @@
 export type Stock = { symbol: string; name: string; mark: string; color: string; price: number; change: number; sector: string };
-export type Quote = { symbol: string; price: number; change: number; timestamp: number };
+export type Quote = { symbol: string; price: number; change: number; timestamp: number; previousClose?: number };
 export type Article = { id: number; headline: string; source: string; url: string; datetime: number; summary: string };
 export type Holding = { id: string; symbol: string; quantity: number; cost: number };
 

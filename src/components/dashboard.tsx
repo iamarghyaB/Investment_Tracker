@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAccount } from "./account-provider";
 import { createClient } from "@/lib/supabase/client";
-import { Activity, ArrowDownRight, ArrowRight, ArrowUpRight, Bell, BriefcaseBusiness, ChevronDown, ChevronRight, CircleHelp, DollarSign, Globe, LayoutDashboard, Menu, Newspaper, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Star, TrendingUp, X } from "lucide-react";
+import { Activity, ArrowDownRight, ArrowRight, ArrowUpRight, Bell, BriefcaseBusiness, ChevronDown, ChevronRight, CircleHelp, DollarSign, LayoutDashboard, Menu, Newspaper, Plus, RefreshCw, Search, ShieldCheck, Sparkles, Star, TrendingUp, X } from "lucide-react";
 import { PerformanceChart, ProfitChart, Sparkline } from "./charts";
+import { MarketTicker } from "./market-ticker";
 import { initialHoldings, stocks, type Article, type Holding, type Quote, type Stock } from "@/lib/sample-data";
 
 const currency = (value: number) => value.toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -32,6 +33,7 @@ export default function Dashboard() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const [quotes, setQuotes] = useState<Record<string, Quote>>({});
+  const [quoteHistory, setQuoteHistory] = useState<Record<string, Quote[]>>({});
   const [articles, setArticles] = useState<Article[]>([]);
   const [mode, setMode] = useState("demo");
   const [refreshing, setRefreshing] = useState(false);
@@ -80,6 +82,17 @@ export default function Dashboard() {
         const data = await response.json();
         setMode(data.mode);
         setQuotes(Object.fromEntries((data.quotes as Quote[]).map(quote => [quote.symbol, quote])));
+        setQuoteHistory(previous => {
+          const next = { ...previous };
+          for (const quote of data.quotes as Quote[]) {
+            const samples = previous[quote.symbol] || [];
+            const last = samples[samples.length - 1];
+            if (!last || quote.timestamp > last.timestamp || (quote.timestamp === last.timestamp && quote.price !== last.price)) {
+              next[quote.symbol] = [...samples, quote].slice(-30);
+            }
+          }
+          return next;
+        });
         setArticles(data.articles);
         setMarketError(data.error || "");
         setNewsError(data.newsError || "");
@@ -138,7 +151,7 @@ export default function Dashboard() {
       <div className="sidebar-bottom"><div className="preview-card"><div className="preview-icon"><ShieldCheck size={19} /></div><h3>Your portfolio. Your view.</h3><p>Follow the market and keep your investments in focus.</p><span className="preview-label">Dashboard preview</span></div><button className="help-button" onClick={() => setNotice("Your watchlist is private and saved to your account. New saves require Pro. Portfolio holdings remain sample data for now.")}><CircleHelp size={17} /> Help & information <ArrowUpRight size={14} /></button><div className="sidebar-foot"><span className="purple-dot" />Tracking, made simple<span>v0.1</span></div></div>
     </aside>
     <div className="workspace">
-      <div className="ticker-strip"><span className="market-label"><Globe size={14} /><span>US markets</span><small>{isDemo ? "Sample quotes" : "Finnhub quotes"}</small></span><div className="ticker-items">{stocks.slice(0, 6).map((stock, i) => <button key={stock.symbol} className="ticker" onClick={() => setSelected(stock)}><StockMark stock={stock} /><b>{stock.symbol}</b><Sparkline positive={stock.change >= 0} seed={i * 3} /><span>{getChange(stock) === undefined ? "—" : `${getChange(stock)! >= 0 ? "+" : ""}${getChange(stock)!.toFixed(2)}%`}</span></button>)}</div></div>
+      <MarketTicker quotes={quotes} history={quoteHistory} demo={isDemo} onSelect={setSelected} />
       <header className="topbar"><div className="topbar-left"><button className="icon-button mobile-menu" aria-label="Toggle navigation" onClick={() => setMenuOpen(!menuOpen)}><Menu size={20} /></button><span className="breadcrumb">Workspace <ChevronRight size={13} /> <strong>{active}</strong></span></div><div className="topbar-right"><div className="search-box"><Search size={16} /><input ref={searchRef} aria-label="Search stocks" placeholder="Search stocks..." value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => { if (event.key === "Escape") setQuery(""); if (event.key === "Enter" && results[0]) { setSelected(results[0]); setQuery(""); } }} /><kbd>⌘ K</kbd>{query ? <div className="search-results">{results.length ? results.map(stock => <button key={stock.symbol} onClick={() => { setSelected(stock); setQuery(""); }}><StockMark stock={stock} /><span><b>{stock.symbol}</b><small>{stock.name}</small></span><ArrowUpRight size={15} /></button>) : <p>No matching stocks in this preview.</p>}</div> : null}</div><button className="icon-button notifications" aria-label="View notifications" onClick={() => setNotice("You're all caught up. Price alerts will be added in a later release.")}><Bell size={18} /><i /></button><div className="header-divider" /><div className="account-controls">{account.user ? <><Link href="/pricing" className="account-plan">{account.paid ? "Pro" : "Free"}</Link><span className="account-email">{account.user.email}</span><button className="secondary-button" onClick={async () => { const { error } = await createClient().auth.signOut(); if (error) { setNotice("Unable to sign out. Try again."); return; } window.location.assign("/"); }}>Sign out</button></> : <Link href="/login" className="secondary-button">Sign in <ArrowRight size={14} /></Link>}</div></div></header>
       <main id="main-content">
         <div className="page-heading"><div><div className="eyebrow">YOUR MARKET, IN FOCUS</div><h1>{active === "Dashboard" ? "Investment overview" : active === "Portfolio" ? "My portfolio" : active === "Watchlist" ? "My watchlist" : "Market news"}<span className="heading-dot">.</span></h1><p>{active === "Dashboard" ? "A little perspective on your investments. All in one place." : active === "Portfolio" ? "Keep track of the companies you own and how they're performing." : active === "Watchlist" ? "The companies on your radar. Ready when you are." : "Stay close to the stories behind your stocks."}</p></div><div className="heading-actions"><button className="secondary-button" onClick={() => setRefreshToken(value => value + 1)} disabled={refreshing}><RefreshCw size={15} className={refreshing ? "spinning" : ""} /> Refresh</button><button className="primary-button" onClick={() => setHoldingModal(true)}><Plus size={17} /> Add holding</button></div></div>

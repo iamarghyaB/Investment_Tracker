@@ -44,10 +44,36 @@ nav { display: flex; flex-direction: column; gap: 6px; }
 .sidebar-foot { border-top: 1px solid #262330; padding: 20px 2px; color: #7c7588; font-size: 9px; display: flex; align-items: center; gap: 7px; }
 .sidebar-foot span:last-child { margin-left: auto; }
 .workspace { margin-left: 224px; }
-.ticker-strip { height: 49px; border-bottom: 1px solid #252430; background: #101019; display: flex; align-items: center; overflow: hidden; }
+.ticker-strip { height: 58px; border-bottom: 1px solid #252430; background: #101019; display: flex; align-items: center; overflow: hidden; }
 .market-label { display: flex; align-items: center; gap: 8px; padding: 0 24px; white-space: nowrap; font-size: 10px; border-right: 1px solid #2d2937; min-width: 208px; }
 .market-label svg { color: #9891a7; }
-.market-label small { display: none; }
+.market-label { flex-shrink: 0; align-self: stretch; background: #101019; z-index: 1; }
+.market-label > div { display: flex; flex-direction: column; gap: 6px; }
+.market-label small { display: flex; align-items: center; gap: 5px; color: #8d879d; font-size: 8px; }
+.market-label .green-dot { width: 4px; height: 4px; box-shadow: 0 0 8px #66d8a466; animation: feed-pulse 2s ease-in-out infinite; }
+.ticker-window { overflow: hidden; min-width: 0; flex: 1; mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent); }
+.ticker-track { display: flex; width: max-content; animation: market-scroll 65s linear infinite; will-change: transform; }
+.ticker-group { display: flex; flex-shrink: 0; }
+.ticker-window:hover .ticker-track, .ticker-window:focus-within .ticker-track, .ticker-paused .ticker-track { animation-play-state: paused; }
+.ticker-group .ticker { gap: 11px; padding: 10px 22px; min-width: 255px; height: 57px; border-right: 1px solid #ffffff06; }
+.ticker:hover { background: #ffffff04; }
+.ticker-company, .ticker-numbers { display: flex; flex-direction: column; gap: 5px; }
+.ticker-company b { font-size: 10px; letter-spacing: .2px; }
+.ticker-company small { max-width: 87px; overflow: hidden; text-overflow: ellipsis; color: #777184; font-size: 8px; }
+.ticker-numbers { text-align: right; margin-left: auto; min-width: 52px; font-variant-numeric: tabular-nums; }
+.ticker-numbers b { color: #e4dfed; font-size: 10px; font-weight: 500; }
+.ticker-numbers small { font-size: 9px; }
+.ticker-chart { width: 58px; height: 25px; overflow: visible; }
+.ticker-chart path { fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; transition: d .7s ease, color .3s; }
+.ticker-chart circle { fill: currentColor; transition: cy .7s ease; }
+.ticker-control { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 100%; color: #a59ab8; background: #101019; border-left: 1px solid #252430; }
+.ticker-control:hover { background: #211b30; }
+.quote-flash { animation: quote-update 1.5s ease-out; }
+@keyframes market-scroll { to { transform: translateX(-50%); } }
+@keyframes feed-pulse { 50% { opacity: .4; } }
+@keyframes quote-update { from { background: #8064d944; } to { background: transparent; } }
+@media (max-width: 650px) { .app-shell .ticker-strip { height: 56px; } .app-shell .sidebar { top: 127px; } .market-label { min-width: 114px; } .ticker-group .ticker { min-width: 245px; height: 55px; padding: 9px 16px; } }
+@media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; transform: none; } .ticker-window { overflow-x: auto; } .ticker-group[aria-hidden="true"] { display: none; } .market-label .green-dot, .quote-flash { animation: none; } .ticker-chart path, .ticker-chart circle { transition: none; } }
 .ticker-items { display: flex; align-items: center; flex: 1; justify-content: space-around; min-width: 770px; }
 .ticker { display: flex; align-items: center; gap: 9px; background: none; padding: 10px 13px; white-space: nowrap; font-size: 10px; }
 .ticker .stock-mark { width: 20px; height: 20px; font-size: 12px; border-radius: 50%; }

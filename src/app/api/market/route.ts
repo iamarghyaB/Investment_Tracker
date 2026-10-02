@@ -27,7 +27,7 @@ async function loadMarket(key: string): Promise<MarketResult> {
   const results = await Promise.allSettled(stocks.map(async stock => {
     const data = await request(`quote?symbol=${stock.symbol}`, key);
     if (!Number.isFinite(data.c) || data.c <= 0 || !Number.isFinite(data.dp) || !Number.isFinite(data.t) || data.t <= 0) throw new Error(`Quote unavailable for ${stock.symbol}.`);
-    return { symbol: stock.symbol, price: data.c as number, change: data.dp as number, timestamp: data.t as number };
+    return { symbol: stock.symbol, price: data.c as number, change: data.dp as number, timestamp: data.t as number, ...(Number.isFinite(data.pc) && data.pc > 0 ? { previousClose: data.pc as number } : {}) };
   }));
   const quotes = results.flatMap(result => result.status === "fulfilled" ? [result.value] : []);
   const failures = results.filter(result => result.status === "rejected");
